@@ -6,6 +6,10 @@ the hits, and jumps between them.
 
 English | [中文](README.zh.md)
 
+![The find bar over a Markdown preview, with the current hit in orange](assets/find-bar.png)
+
+![The find bar: input, count, previous/next, match case, whole word, close](assets/find-bar-closeup.png)
+
 ## What it does
 
 - **A magnifier button in the document toolbar**, next to *Open in app*. It appears only

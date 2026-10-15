@@ -5,6 +5,10 @@
 
 [English](README.md) | 中文
 
+![查找栏覆盖在 Markdown 预览上，当前命中为橙色](assets/find-bar.png)
+
+![查找栏：输入框、计数、上一个/下一个、区分大小写、全字匹配、关闭](assets/find-bar-closeup.png)
+
 ## 功能
 
 - **文档工具栏里的放大镜按钮**，紧挨 *Open in app*。只在预览显示文本文件时出现，因此
