@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Find in Preview",
+    "description": "Adds a find bar to sidebar text previews: whole-file match count, highlighted hits, and jumps. Search, case and whole-word options in the document toolbar."
+  }
+}

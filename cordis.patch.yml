@@ -1,0 +1,3 @@
+- insert:
+    - id: find-viewer
+      name: dsh-find-viewer

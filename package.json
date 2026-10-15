@@ -1,0 +1,59 @@
+{
+  "name": "dsh-find-viewer",
+  "version": "0.1.0",
+  "description": "Find bar for DeepSeek Harness sidebar text previews: whole-file match count, highlighted hits, and jumps — with match-case and whole-word options.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Makk9609/dsh-find-viewer.git"
+  },
+  "homepage": "https://github.com/Makk9609/dsh-find-viewer",
+  "bugs": {
+    "url": "https://github.com/Makk9609/dsh-find-viewer/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "find",
+    "search",
+    "sidebar",
+    "document-preview"
+  ],
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "locale",
+    "test",
+    "README.md",
+    "README.zh.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node test/smoke.mjs"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar-documentpreview"
+      ]
+    }
+  }
+}
