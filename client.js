@@ -38,6 +38,8 @@ window.__ModuleLoader__.load({
     /** DOM 变化到重新计算的去抖间隔。 */
     const SETTLE_MS = 120;
     const SOURCE_CACHE_LIMIT = 8;
+    /** 打开时自动填入的选中文本上限，超过这个长度说明选中的不是关键词。 */
+    const MAX_SELECTION_QUERY = 200;
     const FILE_PREFIX = 'dsh-resource://file/';
 
     const zh = {
@@ -151,6 +153,20 @@ window.__ModuleLoader__.load({
         for (const match of text.matchAll(source)) hits.push({ col: match.index, len: match[0].length });
         return hits;
       };
+    }
+
+    /**
+     * 选中文本 → 关键词：取第一段非空行并去掉首尾空白。
+     * @param text - 预览区里选中的文本。
+     * @returns 可用的关键词；没有内容或整行过长时返回 null。
+     */
+    function queryFromSelection(text) {
+      for (const line of text.split(/\r?\n/u)) {
+        const trimmed = line.trim();
+        if (trimmed === '') continue;
+        return trimmed.length > MAX_SELECTION_QUERY ? null : trimmed;
+      }
+      return null;
     }
 
     /**
@@ -524,6 +540,15 @@ window.__ModuleLoader__.load({
         input.select();
       }, []);
 
+      /** 预览区里选中了文本时，用它的第一行作为关键词。 */
+      const selectionQuery = React.useCallback(() => {
+        const root = rootOf();
+        const selection = window.getSelection();
+        if (root === null || selection === null || selection.isCollapsed) return null;
+        if (root.contains(selection.anchorNode) === false || root.contains(selection.focusNode) === false) return null;
+        return queryFromSelection(selection.toString());
+      }, [rootOf]);
+
       // 正文变化（翻页、重载、换渲染器）时递增 stamp，驱动探测与重算。
       React.useEffect(() => {
         const root = rootOf();
@@ -690,12 +715,15 @@ window.__ModuleLoader__.load({
        * 打开查找栏。
        * 位置在这里同步量好：首帧就可见，输入框才能拿到焦点；visibility:hidden 的
        * 元素无法获得焦点，若把定位留给 effect，输入框会一直不被聚焦。
+       * 预览区里有选中文本时直接用它作为关键词。
        */
       const openBar = React.useCallback(() => {
+        const seeded = selectionQuery();
+        if (seeded !== null) setQuery(seeded);
         measure();
         setOpen(true);
         focusInput();
-      }, [measure, focusInput]);
+      }, [measure, focusInput, selectionQuery]);
 
       const closeBar = React.useCallback(() => {
         setOpen(false);
@@ -888,7 +916,7 @@ window.__ModuleLoader__.load({
     return {
       inject: ['slots', 'locale', 'sidebarRight', 'remote', 'remote.workspaceFiles'],
       apply,
-      __test: { buildMatcher, matchLines, decodeAddress, styleText },
+      __test: { buildMatcher, matchLines, decodeAddress, styleText, queryFromSelection },
     };
   },
 });

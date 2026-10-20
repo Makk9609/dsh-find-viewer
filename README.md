@@ -19,6 +19,9 @@ English | [中文](README.zh.md)
   (`W`) and close. `Enter` goes to the next hit, `Shift+Enter` to the previous one, `Esc`
   closes.
 - **`Cmd/Ctrl+F`** opens it while the preview is the pane you last clicked in.
+- **Search a selection**: select text in the preview, then open the bar — the selection
+  becomes the keyword. A multi-line selection uses its first line; a selection longer than
+  200 characters is ignored.
 - **Hits are highlighted in the colours Edge and Chrome use for find-on-page**: yellow
   `#FFFF00` for hits, orange `#FF9632` for the current one, black text on both. Typing a
   keyword scrolls to the first hit.

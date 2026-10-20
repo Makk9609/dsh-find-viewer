@@ -92,7 +92,7 @@ check('registers an appended list entry', registered.length === 1 && registered[
 check('registers a component function', typeof registered[0]?.component === 'function');
 check('apply installs three effects', effectCount === 3, `got ${effectCount}`);
 
-const { buildMatcher, matchLines, decodeAddress, styleText } = plugin.__test;
+const { buildMatcher, matchLines, decodeAddress, styleText, queryFromSelection } = plugin.__test;
 const hits = (query, text, caseSensitive = false, wholeWord = false) => buildMatcher(query, caseSensitive, wholeWord)(text);
 
 check('matches case-insensitively by default', JSON.stringify(hits('foo', 'Foo foo')) === JSON.stringify([{ col: 0, len: 3 }, { col: 4, len: 3 }]), JSON.stringify(hits('foo', 'Foo foo')));
@@ -113,6 +113,13 @@ check('rejects a non-file address', decodeAddress('dsh-resource://session/s1') =
 const css = styleText({ match: 'm', current: 'c' });
 check('paints hits yellow', css.includes('::highlight(m){background-color:#ffff00;color:#000000}'), css);
 check('paints the current hit orange', css.includes('::highlight(c){background-color:#ff9632;color:#000000}'), css);
+
+check('seeds the query from a selected word', queryFromSelection('  needle  ') === 'needle', String(queryFromSelection('  needle  ')));
+check('uses the first selected line', queryFromSelection('a line\n\n  needle here \nlast') === 'a line', String(queryFromSelection('a line\n\n  needle here \nlast')));
+check('skips leading blank selected lines', queryFromSelection('\n\t\n  needle  \nlast') === 'needle', String(queryFromSelection('\n\t\n  needle  \nlast')));
+check('keeps inner spacing of a selected phrase', queryFromSelection('two  words') === 'two  words', String(queryFromSelection('two  words')));
+check('ignores a blank selection', queryFromSelection(' \n\t\n ') === null);
+check('ignores a selection longer than 200 characters', queryFromSelection('x'.repeat(201)) === null);
 
 console.log(`\n${failures === 0 ? 'all checks passed' : `${failures} check(s) failed`}`);
 process.exit(failures === 0 ? 0 : 1);
