@@ -92,7 +92,7 @@ check('registers an appended list entry', registered.length === 1 && registered[
 check('registers a component function', typeof registered[0]?.component === 'function');
 check('apply installs three effects', effectCount === 3, `got ${effectCount}`);
 
-const { buildMatcher, matchLines, decodeAddress, styleText, queryFromSelection } = plugin.__test;
+const { buildMatcher, matchLines, decodeAddress, styleText, queryFromSelection, readSourceLines } = plugin.__test;
 const hits = (query, text, caseSensitive = false, wholeWord = false) => buildMatcher(query, caseSensitive, wholeWord)(text);
 
 check('matches case-insensitively by default', JSON.stringify(hits('foo', 'Foo foo')) === JSON.stringify([{ col: 0, len: 3 }, { col: 4, len: 3 }]), JSON.stringify(hits('foo', 'Foo foo')));
@@ -120,6 +120,31 @@ check('skips leading blank selected lines', queryFromSelection('\n\t\n  needle  
 check('keeps inner spacing of a selected phrase', queryFromSelection('two  words') === 'two  words', String(queryFromSelection('two  words')));
 check('ignores a blank selection', queryFromSelection(' \n\t\n ') === null);
 check('ignores a selection longer than 200 characters', queryFromSelection('x'.repeat(201)) === null);
+
+// 读取结果必须按 {ok, value} 信封解包；失败与不前进的页都不能让扫描自旋。
+const page = (value) => Promise.resolve({ ok: true, value });
+const readOnce = (payload) => {
+  let calls = 0;
+  const read = () => { calls += 1; return payload(calls); };
+  return { read, calls: () => calls };
+};
+{
+  const source = readOnce(() => page({ version: 'v1', text: 'a\nb', lines: 2, eof: true }));
+  const scanned = await readSourceLines(source.read, 's', 'p', new AbortController().signal, 'v1');
+  check('unwraps the {ok, value} envelope', JSON.stringify(scanned.lines) === JSON.stringify(['a', 'b']) && scanned.truncated === false, JSON.stringify(scanned));
+  check('reads one page when it reaches EOF', source.calls() === 1, String(source.calls()));
+}
+{
+  const source = readOnce(() => Promise.resolve({ ok: false, error: { code: 'gateway/input-invalid', message: 'range failed validation' } }));
+  let thrown = '';
+  try { await readSourceLines(source.read, 's', 'p', new AbortController().signal, 'v1'); } catch (error) { thrown = String(error.message); }
+  check('fails instead of retrying a rejected read', thrown.includes('gateway/input-invalid') && source.calls() === 1, `${thrown} calls=${source.calls()}`);
+}
+{
+  const source = readOnce(() => page({ version: 'v1', text: '', lines: 0, eof: false }));
+  const scanned = await readSourceLines(source.read, 's', 'p', new AbortController().signal, 'v1');
+  check('stops on a page that does not advance', source.calls() === 1 && scanned.truncated === true, `calls=${source.calls()}`);
+}
 
 console.log(`\n${failures === 0 ? 'all checks passed' : `${failures} check(s) failed`}`);
 process.exit(failures === 0 ? 0 : 1);

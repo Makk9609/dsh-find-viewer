@@ -407,6 +407,21 @@ window.__ModuleLoader__.load({
     // ------------------------------------------------------------ 文件读取
 
     /**
+     * 读一页。
+     * `remote.workspaceFiles.read` 的结果是 `{ok, value}` 信封：成功取 `value`，
+     * 失败抛出具名错误，由调用方置为读取失败。
+     */
+    async function readPageOrThrow(readPage, sessionId, path, range, signal) {
+      const result = await readPage(sessionId, path, range, signal);
+      if (result.ok !== true) {
+        const code = result.error !== undefined && result.error.code !== undefined ? result.error.code : 'gateway/unknown';
+        const message = result.error !== undefined && result.error.message !== undefined ? result.error.message : 'read failed';
+        throw new Error(`${code}: ${message}`);
+      }
+      return result.value;
+    }
+
+    /**
      * 按页读完整文件。
      * @returns `{lines, version, truncated}`；被中止返回 null，扫描期间文件版本变化返回 null。
      */
@@ -415,7 +430,7 @@ window.__ModuleLoader__.load({
       let bytes = 0;
       let offset = 1;
       for (;;) {
-        const page = await readPage(sessionId, path, { offset }, signal);
+        const page = await readPageOrThrow(readPage, sessionId, path, { offset }, signal);
         if (signal.aborted) return null;
         if (page.version !== expectedVersion) return null;
         if (page.lines > 0) {
@@ -425,6 +440,8 @@ window.__ModuleLoader__.load({
           }
         }
         if (page.eof) return { lines, version: page.version, truncated: false };
+        // 没有新页时收尾：页码不前进的页不能进入下一次循环。
+        if (page.lines <= 0) return { lines, version: page.version, truncated: true };
         if (lines.length >= MAX_SCAN_LINES || bytes >= MAX_SCAN_BYTES) {
           return { lines, version: page.version, truncated: true };
         }
@@ -434,7 +451,7 @@ window.__ModuleLoader__.load({
 
     /** 取整份源码：先用单行读取核对版本，版本未变直接复用缓存。 */
     async function ensureSource(readPage, address, target, signal) {
-      const probe = await readPage(target.sessionId, target.path, { offset: 1, limit: 1 }, signal);
+      const probe = await readPageOrThrow(readPage, target.sessionId, target.path, { offset: 1, limit: 1 }, signal);
       if (signal.aborted) return null;
       const cached = sourceCache.get(address);
       if (cached !== undefined && cached.version === probe.version) return cached;
@@ -916,7 +933,7 @@ window.__ModuleLoader__.load({
     return {
       inject: ['slots', 'locale', 'sidebarRight', 'remote', 'remote.workspaceFiles'],
       apply,
-      __test: { buildMatcher, matchLines, decodeAddress, styleText, queryFromSelection },
+      __test: { buildMatcher, matchLines, decodeAddress, styleText, queryFromSelection, readSourceLines },
     };
   },
 });
