@@ -1,6 +1,6 @@
 {
   "name": "dsh-find-viewer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Find bar for DeepSeek Harness sidebar text previews: whole-file match count, highlighted hits, and jumps — with match-case and whole-word options.",
   "type": "module",
   "license": "MIT",
