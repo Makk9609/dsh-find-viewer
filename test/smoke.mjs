@@ -1,11 +1,10 @@
 /**
  * Smoke test: loads the client half with stubs and checks the registration path plus the
- * pure logic (matching, address decoding, emitted highlight colours).
+ * pure logic (matching, address decoding, page reads, emitted highlight colours).
  *
  *   node test/smoke.mjs
  *
- * Not covered here: React rendering and interaction with the live document preview; those
- * need a running harness and are described in the README's verification section.
+ * React rendering and interaction with a running document preview are outside this test.
  */
 const registrations = [];
 globalThis.window = {

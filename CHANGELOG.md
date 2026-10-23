@@ -8,8 +8,7 @@ Notable changes per release. Versions follow [SemVer](https://semver.org/).
   returns an `{ok, value}` envelope; reading page fields off the envelope gave no line count,
   so the paging offset became `NaN` and the scan re-issued reads without end while the bar
   stayed on "Scanning…". Reads are now unwrapped, a failed read reports "Could not read the
-  file", and a page without new lines ends the scan. Verified on a 118-line Python file:
-  `1/12` stable, `Enter` advances to `2/12`, one read per search after the cache fills.
+  file", and a page without new lines ends the scan.
 - **Added:** opening the find bar from the toolbar button or `Cmd/Ctrl+F` uses the text
   selected in the preview as the keyword (first line, up to 200 characters).
 - 中文：修复代码与纯文本文件搜索永不结束——读取结果是 `{ok, value}` 信封，未解包导致分页
